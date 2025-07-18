@@ -1,5 +1,5 @@
 {
-  "name": "DigitalGdn/oauth2-sheepcrm",
+  "name": "digitalgdn/oauth2-sheepcrm",
   "description": "SheepCRM OAuth 2.0 support for the PHP League's OAuth 2.0 Client",
   "license": "MIT",
   "authors": [
@@ -18,7 +18,7 @@
     "authentication"
   ],
   "require": {
-    "league/oauth2-client": "^2.0"
+    "league/oauth2-client": "^2.8"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",
