@@ -19,8 +19,8 @@ $sheepProvider = new \DigitalGdn\OAuth2\Client\Provider\Sheep([
 
 // Get authorization code
 if (!isset($_GET['code'])) {
-    // Options are optional, defaults to 'profile' only
-    $options = ['scope' => 'profile postal_code payments:widget payments:shipping_address payments:billing_address'];
+    // Options are optional, defaults shown below
+    $options = ['scope' => 'read', 'write', 'read_membership', 'introspection'];
     // Get authorization URL
     $authorizationUrl = $sheepProvider->getAuthorizationUrl($options);
 
