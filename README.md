@@ -62,10 +62,12 @@ if (!isset($_GET['code'])) {
 
     var_dump(
         $resourceOwner->getId(),
+        $resourceOwner->getUsername(),
         $resourceOwner->getFirstName(),
         $resourceOwner->getLastName(),
         $resourceOwner->getName(),
         $resourceOwner->getEmail(),
+        $resourceOwner->getActiveMember(),
         $resourceOwner->toArray()
     );
 }

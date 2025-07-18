@@ -41,6 +41,16 @@ class SheepResourceOwner implements ResourceOwnerInterface
      *
      * @return string|null
      */
+    public function getUsername()
+    {
+        return $this->getValueByKey($this->response, "app_username");
+    }
+
+    /**
+     * Get resource owner name
+     *
+     * @return string|null
+     */
     public function getName()
     {
         return $this->getValueByKey($this->response, "name");
@@ -74,6 +84,16 @@ class SheepResourceOwner implements ResourceOwnerInterface
     public function getEmail()
     {
         return $this->getValueByKey($this->response, "email");
+    }
+
+    /**
+     * Get resource owner email
+     *
+     * @return string|null
+     */
+    public function getActiveMember()
+    {
+        return $this->getValueByKey($this->response, "active_member", false);
     }
 
     /**
