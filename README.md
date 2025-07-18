@@ -20,7 +20,7 @@ $sheepProvider = new \DigitalGdn\OAuth2\Client\Provider\Sheep([
 // Get authorization code
 if (!isset($_GET['code'])) {
     // Options are optional, defaults shown below
-    $options = ['scope' => 'read', 'write', 'read_membership', 'introspection'];
+    $options = ['scope' => ['read', 'write', 'read_membership', 'introspection']];
     // Get authorization URL
     $authorizationUrl = $sheepProvider->getAuthorizationUrl($options);
 
