@@ -100,7 +100,7 @@ class Sheep extends AbstractProvider
      */
     protected function createResourceOwner(array $response, AccessToken $token)
     {
-        return new SheepCRMResourceOwner($response);
+        return new SheepResourceOwner($response);
     }
 
     /**
