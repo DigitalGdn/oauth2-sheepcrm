@@ -4,8 +4,10 @@ This package provides sheepCRM OAuth 2.0 support for the PHP League's [OAuth 2.0
 
 ## Installation
 
+Requires PHP 8.1 or later.
+
 ```
-composer require DigitalGdn/oauth2-sheepcrm
+composer require digitalgdn/oauth2-sheepcrm
 ```
 
 ## Usage
@@ -19,8 +21,9 @@ $sheepProvider = new \DigitalGdn\OAuth2\Client\Provider\Sheep([
 
 // Get authorization code
 if (!isset($_GET['code'])) {
-    // Options are optional, defaults shown below
-    $options = ['scope' => ['read', 'write', 'read_membership', 'introspection']];
+    // Options are optional, defaults shown below.
+    // Add 'write' or 'introspection' only if your app needs them.
+    $options = ['scope' => ['read', 'read_membership']];
     // Get authorization URL
     $authorizationUrl = $sheepProvider->getAuthorizationUrl($options);
 
@@ -31,12 +34,15 @@ if (!isset($_GET['code'])) {
     header('Location: ' . $authorizationUrl);
     exit;
 // Check for errors
-} elseif (empty($_GET['state']) || (isset($_SESSION['oauth2state']) && $_GET['state'] !== $_SESSION['oauth2state'])) {
+} elseif (empty($_GET['state']) || empty($_SESSION['oauth2state']) || !hash_equals($_SESSION['oauth2state'], $_GET['state'])) {
     if (isset($_SESSION['oauth2state'])) {
         unset($_SESSION['oauth2state']);
     }
     exit('Invalid state');
 } else {
+    // The state is single use
+    unset($_SESSION['oauth2state']);
+
     // Get access token
     try {
         $accessToken = $sheepProvider->getAccessToken(
@@ -45,15 +51,15 @@ if (!isset($_GET['code'])) {
                 'code' => $_GET['code']
             ]
         );
-    } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-        exit($e->getMessage());
+    } catch (\Exception $e) {
+        exit(htmlspecialchars($e->getMessage()));
     }
 
     // Get resource owner
     try {
         $resourceOwner = $sheepProvider->getResourceOwner($accessToken);
-    } catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-        exit($e->getMessage());
+    } catch (\Exception $e) {
+        exit(htmlspecialchars($e->getMessage()));
     }
 
     // Now you can store the results to session etc.
@@ -75,12 +81,21 @@ if (!isset($_GET['code'])) {
 
 For more information see the PHP League's general usage examples.
 
+### Errors
+
+The provider throws `IdentityProviderException` for any OAuth error body and for any HTTP status of 400 or above. The League client throws `UnexpectedValueException` when an error response isn't JSON, so catch both (or `\Exception`).
+
+### Consent screen
+
+SheepCRM's authorisation server skips its consent screen (`approval_prompt=auto`, the default) only while the user still holds an unexpired token for your client covering the requested scopes. To switch the consent screen off entirely, ask SheepCRM to enable "skip authorization" for your application.
+
 ## Testing
 
-``` bash
-$ ./vendor/bin/phpunit
+```bash
+composer install
+composer test
 ```
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/DigitalGdn/oauth2-sheepcrm/blob/master/LICENSE) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/DigitalGdn/oauth2-sheepcrm/blob/main/LICENSE) for more information.

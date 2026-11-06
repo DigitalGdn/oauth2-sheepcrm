@@ -3,10 +3,11 @@
 namespace DigitalGdn\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\AbstractProvider;
-use Psr\Http\Message\ResponseInterface;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
+use Psr\Http\Message\ResponseInterface;
 
 class Sheep extends AbstractProvider
 {
@@ -37,7 +38,7 @@ class Sheep extends AbstractProvider
     /**
      * Get provider url to fetch user details
      *
-     * @param AccessToken $token
+     * @param \League\OAuth2\Client\Token\AccessToken $token
      *
      * @return string
      */
@@ -49,18 +50,21 @@ class Sheep extends AbstractProvider
     /**
      * Get the default scopes used by this provider.
      *
+     * Only what a login needs: basic profile and membership status. Pass
+     * 'scope' to getAuthorizationUrl() to ask for more (e.g. 'write').
+     *
      * @return array
      */
     protected function getDefaultScopes()
     {
-        return ['read', 'write', 'read_membership', 'introspection'];
+        return ['read', 'read_membership'];
     }
 
     /**
      * Returns the string that should be used to separate scopes when building
      * the URL for requesting an access token.
      *
-     * @return string Scope separator, defaults to ','
+     * @return string
      */
     protected function getScopeSeparator()
     {
@@ -70,51 +74,62 @@ class Sheep extends AbstractProvider
     /**
      * Check a provider response for errors.
      *
-     * @param  ResponseInterface $response
-     * @param  array|string $data
+     * Throws on an OAuth error body or on any HTTP status of 400 or above,
+     * so an error body is never mistaken for a token or a user profile.
      *
-     * @throws IdentityProviderException
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param array|string $data
+     *
+     * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
      */
     protected function checkResponse(ResponseInterface $response, $data)
     {
-        if (isset($data['error'])) {
-            $statusCode = $response->getStatusCode();
-            $error = $data['error'];
-            $errorDescription = $data['error_description'];
-            $errorLink = (isset($data['error_uri']) ? $data['error_uri'] : false);
-            throw new IdentityProviderException(
-                $statusCode . ' - ' . $errorDescription . ': ' . $error . ($errorLink ? ' (see: ' . $errorLink . ')' : ''),
-                $response->getStatusCode(),
-                $response
-            );
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode < 400 && !(is_array($data) && isset($data['error']))) {
+            return;
         }
+
+        $message = (string) $statusCode;
+
+        if (is_array($data)) {
+            $error = isset($data['error']) ? $data['error'] : null;
+            $description = null;
+            foreach (['error_description', 'detail', 'message'] as $key) {
+                if (isset($data[$key]) && is_scalar($data[$key])) {
+                    $description = (string) $data[$key];
+                    break;
+                }
+            }
+
+            if ($description !== null) {
+                $message .= ' - ' . $description;
+            } elseif ($response->getReasonPhrase() !== '') {
+                $message .= ' - ' . $response->getReasonPhrase();
+            }
+            if (is_scalar($error)) {
+                $message .= ': ' . $error;
+            }
+            if (isset($data['error_uri']) && is_scalar($data['error_uri'])) {
+                $message .= ' (see: ' . $data['error_uri'] . ')';
+            }
+        } elseif ($response->getReasonPhrase() !== '') {
+            $message .= ' - ' . $response->getReasonPhrase();
+        }
+
+        throw new IdentityProviderException($message, $statusCode, $data);
     }
 
     /**
      * Generate a user object from a successful user details request.
      *
      * @param array $response
-     * @param AccessToken $token
+     * @param \League\OAuth2\Client\Token\AccessToken $token
      *
-     * @return League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @return \League\OAuth2\Client\Provider\ResourceOwnerInterface
      */
     protected function createResourceOwner(array $response, AccessToken $token)
     {
         return new SheepResourceOwner($response);
-    }
-
-    /**
-     * Returns a prepared request for requesting an access token.
-     *
-     * @param array $params
-     *
-     * @return Psr\Http\Message\RequestInterface
-     */
-    protected function getAccessTokenRequest(array $params)
-    {
-        $request = parent::getAccessTokenRequest($params);
-        $uri = $request->getUri()
-            ->withUserInfo($this->clientId, $this->clientSecret);
-        return $request->withUri($uri);
     }
 }

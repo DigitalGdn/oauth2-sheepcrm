@@ -19,7 +19,7 @@ class SheepResourceOwner implements ResourceOwnerInterface
     /**
      * Creates new resource owner.
      *
-     * @param array  $response
+     * @param array $response
      */
     public function __construct(array $response = [])
     {
@@ -29,15 +29,18 @@ class SheepResourceOwner implements ResourceOwnerInterface
     /**
      * Get resource owner id
      *
+     * SheepCRM's userinfo returns the user's URI path as "id". "user_id" is
+     * kept as a fallback for older responses.
+     *
      * @return string|null
      */
     public function getId()
     {
-        return $this->getValueByKey($this->response, "user_id");
+        return $this->getValueByKey($this->response, "id", $this->getValueByKey($this->response, "user_id"));
     }
 
     /**
-     * Get resource owner name
+     * Get resource owner username
      *
      * @return string|null
      */
@@ -87,13 +90,13 @@ class SheepResourceOwner implements ResourceOwnerInterface
     }
 
     /**
-     * Get resource owner email
+     * Whether the resource owner is an active member
      *
-     * @return string|null
+     * @return bool
      */
     public function getActiveMember()
     {
-        return $this->getValueByKey($this->response, "active_member", false);
+        return (bool) $this->getValueByKey($this->response, "active_member", false);
     }
 
     /**
