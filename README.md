@@ -85,10 +85,6 @@ For more information see the PHP League's general usage examples.
 
 The provider throws `IdentityProviderException` for any OAuth error body and for any HTTP status of 400 or above. The League client throws `UnexpectedValueException` when an error response isn't JSON, so catch both (or `\Exception`).
 
-### Consent screen
-
-SheepCRM's authorisation server skips its consent screen (`approval_prompt=auto`, the default) only while the user still holds an unexpired token for your client covering the requested scopes. To switch the consent screen off entirely, ask SheepCRM to enable "skip authorization" for your application.
-
 ## Testing
 
 ```bash
